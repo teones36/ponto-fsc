@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <meta name="theme-color" content="#E65300">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="/manifest.json">
@@ -354,6 +357,15 @@ p{color:#888;font-size:13px;text-align:center;margin-bottom:2rem}
 </div>
 
 <script>
+// Global error handler to show JS errors visibly
+window.onerror = function(msg, src, line, col, err) {
+  var div = document.createElement('div');
+  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:red;color:white;padding:10px;font-size:12px;z-index:9999;word-break:break-all';
+  div.textContent = 'ERRO JS: ' + msg + ' (linha ' + line + ')';
+  document.body.appendChild(div);
+  return false;
+};
+
 const ADMIN_USER='admin', ADMIN_PASS='1234';
 const CNPJ='26328011000199';
 const FB_URL='https://ponto-fsc-default-rtdb.firebaseio.com';
@@ -370,7 +382,7 @@ let modOk=false, camOk=false, scanning=false, camPausado=false;
 let detInt=null, cdInt=null, cadStream=null, pollInt=null;
 let cadDesc=null, cadThumb=null, editId=null, fbOk=false;
 
-// ── STORAGE ──
+// -- STORAGE --
 function ld(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
 async function sv(k,v){
   localStorage.setItem(k,JSON.stringify(v));
@@ -381,7 +393,7 @@ async function sv(k,v){
   }catch(e){console.warn('sv:',e.message)}
 }
 
-// ── FIREBASE ──
+// -- FIREBASE --
 async function initFB(){
   emps=ld('fsc_e',[]); regs=ld('fsc_r',[]);
   try{
@@ -411,11 +423,11 @@ async function sincFB(){
 }
 function setSyncSt(ok){
   const el=document.getElementById('sync-st');if(!el)return;
-  el.textContent=ok?'🟢 Sincronizado':'🔴 Offline';
+  el.textContent=ok?'Sincronizado OK':'Offline';
   el.style.color=ok?'#16A34A':'#DC2626';
 }
 
-// ── NAVEGAÇÃO ──
+// -- NAVEGACAO --
 function mostrar(id){
   document.getElementById('tela-login').style.display='none';
   document.getElementById('tela-admin').style.display='none';
@@ -437,7 +449,7 @@ function login(){
     mostrar('tela-admin');renderDash();checkBday();
   }else{
     const el=document.getElementById('l-erro');
-    el.textContent='Usuário ou senha incorretos.';
+    el.textContent='Usuario ou senha incorretos.';
     setTimeout(()=>el.textContent='',2500);
   }
 }
@@ -445,7 +457,7 @@ function irLogin(){pararCamPonto();mostrar('tela-login')}
 function irPonto(){mostrar('tela-ponto');initPonto()}
 document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 
-// ── ADMIN ABAS ──
+// -- ADMIN ABAS --
 function aba(n,btn){
   ['dash','cad','funcs','regs','rel','bday'].forEach(t=>{
     document.getElementById('aba-'+t).style.display=t===n?'block':'none';
@@ -459,30 +471,30 @@ function aba(n,btn){
   if(n==='dash')renderDash();
 }
 
-// ── HELPERS ──
+// -- HELPERS --
 function ini(s){return s.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase()}
 function fmtD(d){if(!d)return'';const[y,m,x]=d.split('-');return x+'/'+m+'/'+y}
 function hm(s){return s?s.slice(0,5):'-'}
 function notif(msg){const el=document.getElementById('notif');document.getElementById('notif-txt').textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000)}
 function msgSalvar(m,ok){const el=document.getElementById('msg-salvar');el.textContent=m;el.style.color=ok?'#16A34A':'#DC2626';setTimeout(()=>el.textContent='',3000)}
 
-// ── CAM CADASTRO ──
+// -- CAM CADASTRO --
 async function abrirCamCad(){
   if(!modOk)await carregarModelos();
   document.getElementById('cam-cad').style.display='block';
-  document.getElementById('foto-msg').textContent='Posicione o rosto na câmera...';
+  document.getElementById('foto-msg').textContent='Posicione o rosto na c?mera...';
   try{
     const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640}}});
     document.getElementById('vid-cad').srcObject=s;
     cadStream=s;
-  }catch(e){document.getElementById('foto-msg').textContent='❌ Câmera não permitida.'}
+  }catch(e){document.getElementById('foto-msg').textContent='? C?mera n?o permitida.'}
 }
 async function tirarFoto(){
   const v=document.getElementById('vid-cad'),fa=window.faceapi;
   document.getElementById('foto-msg').textContent='Detectando rosto...';
   try{
     const det=await fa.detectSingleFace(v,new fa.TinyFaceDetectorOptions({scoreThreshold:.35})).withFaceLandmarks(true).withFaceDescriptor();
-    if(!det){document.getElementById('foto-msg').textContent='❌ Rosto não detectado. Tente novamente.';return}
+    if(!det){document.getElementById('foto-msg').textContent='? Rosto n?o detectado. Tente novamente.';return}
     const tc=document.createElement('canvas');tc.width=200;tc.height=200;
     const b=det.detection.box,p=30;
     tc.getContext('2d').drawImage(v,b.x-p,b.y-p,b.width+p*2,b.height+p*2,0,0,200,200);
@@ -491,22 +503,22 @@ async function tirarFoto(){
     document.getElementById('foto-prev').src=cadThumb;
     document.getElementById('foto-prev').style.display='block';
     document.getElementById('foto-ph').style.display='none';
-    document.getElementById('foto-msg').textContent='✅ Rosto capturado com sucesso!';
+    document.getElementById('foto-msg').textContent='? Rosto capturado com sucesso!';
     fecharCamCad();
-  }catch(e){document.getElementById('foto-msg').textContent='❌ Erro: '+e.message}
+  }catch(e){document.getElementById('foto-msg').textContent='? Erro: '+e.message}
 }
 function fecharCamCad(){
   if(cadStream){cadStream.getTracks().forEach(t=>t.stop());cadStream=null}
   document.getElementById('cam-cad').style.display='none';
 }
 
-// ── SALVAR / EDITAR ──
+// -- SALVAR / EDITAR --
 async function salvar(){
   const nome=document.getElementById('c-nome').value.trim();
   const func=document.getElementById('c-func').value;
   const turno=document.getElementById('c-turno').value;
-  if(!nome||!func||!turno){msgSalvar('❌ Preencha nome, função e turno.',false);return}
-  if(!cadDesc&&!editId){msgSalvar('❌ Capture a foto primeiro.',false);return}
+  if(!nome||!func||!turno){msgSalvar('? Preencha nome, fun??o e turno.',false);return}
+  if(!cadDesc&&!editId){msgSalvar('? Capture a foto primeiro.',false);return}
   const d={
     nome,func,turno,
     ent:document.getElementById('c-ent').value,
@@ -522,10 +534,10 @@ async function salvar(){
   if(editId){
     const i=emps.findIndex(e=>e.id===editId);
     if(i>-1)emps[i]={...emps[i],...d,...(cadDesc&&{foto:cadThumb,desc:Array.from(cadDesc)})};
-    await sv('fsc_e',emps);cancelarEdit();msgSalvar('✅ '+nome+' atualizado!',true);
+    await sv('fsc_e',emps);cancelarEdit();msgSalvar(nome+' atualizado!',true);
   }else{
     emps.push({id:Date.now(),...d,foto:cadThumb,desc:Array.from(cadDesc)});
-    await sv('fsc_e',emps);resetForm();msgSalvar('✅ '+nome+' cadastrado!',true);
+    await sv('fsc_e',emps);resetForm();msgSalvar(nome+' cadastrado!',true);
   }
 }
 function editarEmp(id){
@@ -546,14 +558,14 @@ function editarEmp(id){
   if(e.foto){document.getElementById('foto-prev').src=e.foto;document.getElementById('foto-prev').style.display='block';document.getElementById('foto-ph').style.display='none'}
   document.getElementById('banner-edit').style.display='block';
   document.getElementById('edit-nome-txt').textContent=e.nome;
-  document.getElementById('btn-salvar').textContent='💾 Salvar Alterações';
+  document.getElementById('btn-salvar').textContent='Salvar Alteracoes';
   document.querySelectorAll('.adm-tab')[1].click();
   window.scrollTo(0,0);
 }
 function cancelarEdit(){
   editId=null;resetForm();
   document.getElementById('banner-edit').style.display='none';
-  document.getElementById('btn-salvar').textContent='✅ Salvar Funcionário';
+  document.getElementById('btn-salvar').textContent='Salvar Funcionario';
 }
 function resetForm(){
   ['c-nome','c-func','c-turno','c-ent','c-is','c-ir','c-sai','c-nasc','c-adm','c-cpf','c-pis','c-obs'].forEach(id=>document.getElementById(id).value='');
@@ -563,31 +575,20 @@ function resetForm(){
   document.getElementById('foto-msg').textContent='';
 }
 
-// ── RENDERIZAR ──
+// -- RENDERIZAR --
 function renderEmps(){
   const el=document.getElementById('emp-list');if(!el)return;
-  if(!emps.length){el.innerHTML='<div class="empty">Nenhum funcionário cadastrado.</div>';return}
-  el.innerHTML=emps.map(e=>`
-    <div class="emp-card">
-      ${e.foto?`<img class="emp-foto" src="${e.foto}">`:`<div class="emp-ini">${ini(e.nome)}</div>`}
-      <div class="emp-info">
-        <div class="emp-nome">${e.nome}</div>
-        <div class="emp-sub">${e.func} · <span class="badge ${e.turno==='1'?'bt1':'bt2'}">Turno ${e.turno}</span></div>
-        <div style="font-size:11px;color:#A8A29E;margin-top:3px;font-family:monospace">
-          ${e.ent?'Ent:'+hm(e.ent):''} ${e.sai?'· Saí:'+hm(e.sai):''}<br>
-          ${e.nasc?'🎂 '+fmtD(e.nasc):''} ${e.adm?'· 📅 '+fmtD(e.adm):''}<br>
-          ${e.cpf?'CPF: '+e.cpf:''}
-        </div>
-      </div>
-      <div>
-        <button class="btn-edit" onclick="editarEmp(${e.id})">✏️</button>
-        <button class="btn-del" onclick="removerEmp(${e.id})">🗑</button>
-      </div>
-    </div>
-  `).join('');
+  if(!emps.length){el.innerHTML='<div class="empty">Nenhum funcion?rio cadastrado.</div>';return}
+  el.innerHTML=emps.map(function(e){
+    var badge=e.turno==='1'?'bt1':'bt2';
+    var fotoHtml=e.foto?'<img class="emp-foto" src="'+e.foto+'">':'<div class="emp-ini">'+ini(e.nome)+'</div>';
+    return '<div class="emp-card">'+fotoHtml+'<div class="emp-info"><div class="emp-nome">'+e.nome+'</div><div class="emp-sub">'+e.func+' <span class="badge '+badge+'">Turno '+e.turno+'</span></div><div style="font-size:11px;color:#A8A29E;margin-top:3px">'+
+    (e.ent?'Ent:'+hm(e.ent):'')+' '+(e.sai?'Sai:'+hm(e.sai):'')+'<br>'+(e.nasc?'Nasc:'+fmtD(e.nasc):'')+' '+(e.adm?'Adm:'+fmtD(e.adm):'')+'<br>'+(e.cpf?'CPF:'+e.cpf:'')+
+    '</div></div><div><button class="btn-edit" onclick="editarEmp('+e.id+')">Editar</button><button class="btn-del" onclick="removerEmp('+e.id+')">Remover</button></div></div>';
+  }).join('');;
 }
 async function removerEmp(id){
-  if(!confirm('Remover este funcionário?'))return;
+  if(!confirm('Remover este funcion?rio?'))return;
   emps=emps.filter(e=>e.id!==id);
   await sv('fsc_e',emps);renderEmps();
 }
@@ -601,25 +602,23 @@ function renderDash(){
     if(e){const t=TURNOS[e.turno];if(t&&r.hora>t.e.f)late.add(r.eid)}
   });
   const el=document.getElementById('metrics');if(!el)return;
-  el.innerHTML=`
-    <div class="metric"><div class="metric-lbl">Total funcionários</div><div class="metric-val">${emps.length}</div></div>
-    <div class="metric"><div class="metric-lbl">Presentes hoje</div><div class="metric-val orange">${pres.size}</div></div>
-    <div class="metric"><div class="metric-lbl">Ausentes</div><div class="metric-val" style="color:#DC2626">${emps.length-pres.size}</div></div>
-    <div class="metric"><div class="metric-lbl">Atrasos</div><div class="metric-val">${late.size}</div></div>
-  `;
-  const LBLS={e:'Entrada',s:'Saída',is:'Int. Saída',ir:'Int. Retorno',emerg:'🚨 Emergência'};
+  el.innerHTML=
+    '<div class="metric"><div class="metric-lbl">Total funcionarios</div><div class="metric-val">'+emps.length+'</div></div>'+
+    '<div class="metric"><div class="metric-lbl">Presentes hoje</div><div class="metric-val orange">'+pres.size+'</div></div>'+
+    '<div class="metric"><div class="metric-lbl">Ausentes</div><div class="metric-val" style="color:#DC2626">'+(emps.length-pres.size)+'</div></div>'+
+    '<div class="metric"><div class="metric-lbl">Atrasos</div><div class="metric-val">'+late.size+'</div></div>';
+  const LBLS={e:'Entrada',s:'Sa?da',is:'Int. Sa?da',ir:'Int. Retorno',emerg:'? Emerg?ncia'};
   const tb=document.getElementById('tbl-hoje');if(!tb)return;
   if(!tr.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:#A8A29E;padding:1rem">Nenhum registro hoje.</td></tr>';return}
-  tb.innerHTML=tr.slice().reverse().map(r=>`<tr>
-    <td><strong>${r.nm}</strong></td>
-    <td>${LBLS[r.tipo]||r.tipo}</td>
-    <td style="font-family:monospace">${r.hora}</td>
-    <td><span class="sb ${r.st==='ok'?'sb-ok':r.st==='at'?'sb-at':r.st==='emerg'?'sb-em':'sb-in'}">${r.st==='ok'?'No horário':r.st==='at'?'Atrasado':r.st==='emerg'?'Emergência':'Intervalo'}</span></td>
-  </tr>`).join('');
+  tb.innerHTML=tr.slice().reverse().map(function(r){
+    var sc=r.st==='ok'?'sb-ok':r.st==='at'?'sb-at':r.st==='emerg'?'sb-em':'sb-in';
+    var st=r.st==='ok'?'No horario':r.st==='at'?'Atrasado':r.st==='emerg'?'Emergencia':'Intervalo';
+    return '<tr><td><strong>'+r.nm+'</strong></td><td>'+(LBLS[r.tipo]||r.tipo)+'</td><td>'+r.hora+'</td><td><span class="sb '+sc+'">'+st+'</span></td></tr>';
+  }).join('');;
 }
 function renderRegs(){
   const sel=document.getElementById('fil-emp');if(!sel)return;
-  sel.innerHTML='<option value="">Todos</option>'+emps.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+  sel.innerHTML='<option value="">Todos</option>'+emps.map(function(e){return '<option value="'+e.id+'">'+e.nome+'</option>';}).join('');
   exibirRegs(regs);
 }
 function filtrar(){
@@ -631,27 +630,25 @@ function filtrar(){
   exibirRegs(l);
 }
 function exibirRegs(list){
-  const LBLS={e:'Entrada',s:'Saída',is:'Int. Saída',ir:'Int. Retorno',emerg:'🚨 Emergência'};
+  const LBLS={e:'Entrada',s:'Sa?da',is:'Int. Sa?da',ir:'Int. Retorno',emerg:'? Emerg?ncia'};
   const tb=document.getElementById('tbl-regs');if(!tb)return;
   if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#A8A29E;padding:1rem">Nenhum registro.</td></tr>';return}
-  tb.innerHTML=list.slice().reverse().map(r=>`<tr>
-    <td><strong>${r.nm}</strong></td>
-    <td style="font-size:12px">${new Date(r.ts).toLocaleDateString('pt-BR')}</td>
-    <td>${LBLS[r.tipo]||r.tipo}</td>
-    <td style="font-family:monospace">${r.hora}</td>
-    <td><span class="sb ${r.st==='ok'?'sb-ok':r.st==='at'?'sb-at':r.st==='emerg'?'sb-em':'sb-in'}">${r.st==='ok'?'No horário':r.st==='at'?'Atrasado':r.st==='emerg'?'Emergência':'Intervalo'}</span></td>
-  </tr>`).join('');
+  tb.innerHTML=list.slice().reverse().map(function(r){
+    var sc=r.st==='ok'?'sb-ok':r.st==='at'?'sb-at':r.st==='emerg'?'sb-em':'sb-in';
+    var st=r.st==='ok'?'No horario':r.st==='at'?'Atrasado':r.st==='emerg'?'Emergencia':'Intervalo';
+    return '<tr><td><strong>'+r.nm+'</strong></td><td>'+new Date(r.ts).toLocaleDateString('pt-BR')+'</td><td>'+(LBLS[r.tipo]||r.tipo)+'</td><td>'+r.hora+'</td><td><span class="sb '+sc+'">'+st+'</span></td></tr>';
+  }).join('');;
 }
 function renderRelOpts(){
   const sel=document.getElementById('rel-emp');if(!sel)return;
-  sel.innerHTML='<option value="">Todos</option>'+emps.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+  sel.innerHTML='<option value="">Todos</option>'+emps.map(function(e){return '<option value="'+e.id+'">'+e.nome+'</option>';}).join('');
   const hoje=new Date();
   document.getElementById('rel-ini').value=new Date(hoje.getFullYear(),hoje.getMonth(),1).toISOString().split('T')[0];
   document.getElementById('rel-fim').value=hoje.toISOString().split('T')[0];
 }
 function renderBdays(){
   const el=document.getElementById('bday-list');if(!el)return;
-  if(!emps.length){el.innerHTML='<div class="empty">Nenhum funcionário.</div>';return}
+  if(!emps.length){el.innerHTML='<div class="empty">Nenhum funcion?rio.</div>';return}
   const today=new Date();
   const tMD=String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   const sorted=emps.filter(e=>e.nasc).map(e=>{
@@ -660,15 +657,12 @@ function renderBdays(){
     if(next<today)next.setFullYear(today.getFullYear()+1);
     return{...e,diff:Math.ceil((next-today)/864e5),md:m+'-'+d};
   }).sort((a,b)=>a.diff-b.diff);
-  el.innerHTML='<div class="fc-title">🎂 Aniversários</div>'+sorted.map(e=>{
-    const isT=e.md===tMD;
-    const lbl=isT?'🎉 HOJE!':e.diff===1?'Amanhã':'Em '+e.diff+' dias';
-    return`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E5E2DC">
-      ${e.foto?`<img src="${e.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${isT?'#E65300':'#E5E2DC'}">`:`<div style="width:40px;height:40px;border-radius:50%;background:#FFF0E8;display:flex;align-items:center;justify-content:center;font-weight:700;color:#E65300">${ini(e.nome)}</div>`}
-      <div style="flex:1"><div style="font-size:14px;font-weight:700">${e.nome}</div><div style="font-size:12px;color:#78716C">${e.func} · ${fmtD(e.nasc)}</div></div>
-      <span class="badge" style="background:${isT?'#FFF0E8':'#F7F5F2'};color:${isT?'#E65300':'#78716C'}">${lbl}</span>
-    </div>`;
-  }).join('');
+  el.innerHTML='<div class="fc-title">? Anivers?rios</div>'+sorted.map(function(e){
+    var isT=e.md===tMD;
+    var lbl=isT?'HOJE!':e.diff===1?'Amanha':'Em '+e.diff+' dias';
+    var fg=e.foto?'<img src="'+e.foto+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover">':'<div style="width:40px;height:40px;border-radius:50%;background:#FFF0E8;display:flex;align-items:center;justify-content:center;font-weight:700;color:#E65300">'+ini(e.nome)+'</div>';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E5E2DC">'+fg+'<div style="flex:1"><div style="font-size:14px;font-weight:700">'+e.nome+'</div><div style="font-size:12px;color:#78716C">'+e.func+' - '+fmtD(e.nasc)+'</div></div><span class="badge" style="background:'+(isT?'#FFF0E8':'#F7F5F2')+';color:'+(isT?'#E65300':'#78716C')+'">'+lbl+'</span></div>';
+  }).join('');;
 }
 function checkBday(){
   const today=new Date();
@@ -679,30 +673,30 @@ function checkBday(){
   });
   if(bds.length){
     const ns=bds.map(e=>e.nome.split(' ')[0]).join(', ');
-    notif('Aniversário hoje: '+ns+'! 🎂');
-    document.getElementById('bday-adm').innerHTML='<div class="bday-banner"><div style="font-size:24px">🎂</div><div><div style="font-size:13px;font-weight:700;color:#9A3412">Aniversário hoje!</div><div style="font-size:12px;color:#C2410C">'+ns+'</div></div></div>';
+    notif('Aniversario hoje: '+ns+'! ?');
+    document.getElementById('bday-adm').innerHTML='<div class="bday-banner"><div style="font-size:24px">?</div><div><div style="font-size:13px;font-weight:700;color:#9A3412">Anivers?rio hoje!</div><div style="font-size:12px;color:#C2410C">'+ns+'</div></div></div>';
   }
 }
 
-// ── PDF / AFD ──
+// -- PDF / AFD --
 function gerarPDF(tipo){
   const {jsPDF}=window.jspdf;
   const ini=document.getElementById('rel-ini').value;
   const fim=document.getElementById('rel-fim').value;
   const empId=document.getElementById('rel-emp').value;
-  if(!ini||!fim){document.getElementById('rel-msg').textContent='❌ Selecione o período.';return}
-  if(tipo==='individual'&&!empId){document.getElementById('rel-msg').textContent='❌ Selecione um funcionário.';return}
-  const LBLS={e:'Entrada',s:'Saída',is:'Int. Saída',ir:'Int. Retorno',emerg:'Emergência'};
-  const ST={ok:'No horário',at:'Atrasado',in:'Intervalo',emerg:'Emergência'};
+  if(!ini||!fim){document.getElementById('rel-msg').textContent='Selecione o periodo.';return}
+  if(tipo==='individual'&&!empId){document.getElementById('rel-msg').textContent='Selecione um funcionario.';return}
+  const LBLS={e:'Entrada',s:'Sa?da',is:'Int. Sa?da',ir:'Int. Retorno',emerg:'Emerg?ncia'};
+  const ST={ok:'No hor?rio',at:'Atrasado',in:'Intervalo',emerg:'Emerg?ncia'};
   let lista=regs.filter(r=>{const d=new Date(r.ts).toISOString().split('T')[0];return d>=ini&&d<=fim});
   if(tipo==='individual')lista=lista.filter(r=>r.eid==empId);
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const pw=doc.internal.pageSize.getWidth();let y=20;
   doc.setFillColor(230,83,0);doc.rect(0,0,pw,18,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(14);doc.setFont('helvetica','bold');
-  doc.text('Farmácia Santa Cecília — Relatório de Ponto',pw/2,12,{align:'center'});
+  doc.text('Farm?cia Santa Cec?lia ? Relat?rio de Ponto',pw/2,12,{align:'center'});
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('Período: '+fmtD(ini)+' a '+fmtD(fim),pw/2,17,{align:'center'});
+  doc.text('Per?odo: '+fmtD(ini)+' a '+fmtD(fim),pw/2,17,{align:'center'});
   y=28;
   const grupos={};lista.forEach(r=>{if(!grupos[r.eid])grupos[r.eid]={nome:r.nm,regs:[]};grupos[r.eid].regs.push(r)});
   Object.values(grupos).forEach(g=>{
@@ -723,18 +717,18 @@ function gerarPDF(tipo){
       doc.setTextColor(50,50,50);y+=5;
     });y+=6;
   });
-  if(!lista.length){doc.setTextColor(150,150,150);doc.setFontSize(11);doc.text('Nenhum registro no período.',pw/2,y+10,{align:'center'})}
+  if(!lista.length){doc.setTextColor(150,150,150);doc.setFontSize(11);doc.text('Nenhum registro no per?odo.',pw/2,y+10,{align:'center'})}
   const pgs=doc.internal.getNumberOfPages();
   for(let i=1;i<=pgs;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(180,180,180);doc.text('Gerado em '+new Date().toLocaleString('pt-BR'),pw/2,290,{align:'center'})}
   const nome=tipo==='individual'&&empId?emps.find(e=>String(e.id)===empId)?.nome.split(' ')[0]||'func':'completo';
   doc.save('relatorio-'+nome+'.pdf');
-  document.getElementById('rel-msg').textContent='✅ PDF gerado com sucesso!';
+  document.getElementById('rel-msg').textContent='PDF gerado!';
   setTimeout(()=>document.getElementById('rel-msg').textContent='',3000);
 }
 function gerarAFD(){
   const ini=document.getElementById('rel-ini').value;
   const fim=document.getElementById('rel-fim').value;
-  if(!ini||!fim){document.getElementById('rel-msg').textContent='❌ Selecione o período.';return}
+  if(!ini||!fim){document.getElementById('rel-msg').textContent='Selecione o periodo.';return}
   const iniD=new Date(ini+'T00:00:00'),fimD=new Date(fim+'T23:59:59');
   const linhas=[];let nsr=1;
   function pad(v,n,c,dir){c=c||'0';dir=dir||'left';const s=String(v);return dir==='left'?s.padStart(n,c):s.padEnd(n,c)}
@@ -757,13 +751,13 @@ function gerarAFD(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='AFD_FSC_'+ini.replace(/-/g,'')+'_'+fim.replace(/-/g,'')+'.txt';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
-  document.getElementById('rel-msg').textContent='✅ AFD gerado! '+rP.length+' marcações.';
+  document.getElementById('rel-msg').textContent='AFD gerado! '+rP.length+' marca??es.';
   setTimeout(()=>document.getElementById('rel-msg').textContent='',4000);
 }
 
-// ── EMERGÊNCIA ──
+// -- EMERG?NCIA --
 function abrirEmerg(){
-  document.getElementById('emerg-emp').innerHTML=emps.map(e=>`<option value="${e.id}">${e.nome} — ${e.func}</option>`).join('');
+  document.getElementById('emerg-emp').innerHTML=emps.map(function(e){return '<option value="'+e.id+'">'+e.nome+' - '+e.func+'</option>';}).join('');
   document.getElementById('emerg-senha').value='';
   document.getElementById('emerg-msg').textContent='';
   document.getElementById('modal-emerg').classList.add('aberto');
@@ -771,22 +765,22 @@ function abrirEmerg(){
 function fecharEmerg(){document.getElementById('modal-emerg').classList.remove('aberto')}
 async function confirmarEmerg(){
   if(document.getElementById('emerg-senha').value!==ADMIN_PASS){
-    document.getElementById('emerg-msg').textContent='❌ Senha incorreta.';
+    document.getElementById('emerg-msg').textContent='Senha incorreta.';
     document.getElementById('emerg-msg').style.color='#FCA5A5';return;
   }
   const empId=parseInt(document.getElementById('emerg-emp').value);
   const motivo=document.getElementById('emerg-motivo').value;
   const emp=emps.find(e=>e.id===empId);if(!emp)return;
   const now=new Date();
-  const reg={id:Date.now(),eid:emp.id,nm:emp.nome,tipo:'s',hora:now.toTimeString().slice(0,5),horaF:now.toTimeString().slice(0,8),st:'emerg',obs:'EMERGÊNCIA: '+motivo,ts:now.toISOString()};
+  const reg={id:Date.now(),eid:emp.id,nm:emp.nome,tipo:'s',hora:now.toTimeString().slice(0,5),horaF:now.toTimeString().slice(0,8),st:'emerg',obs:'EMERG?NCIA: '+motivo,ts:now.toISOString()};
   regs.push(reg);await sv('fsc_r',regs);
-  document.getElementById('emerg-msg').textContent='✅ Saída de '+emp.nome+' registrada!';
+  document.getElementById('emerg-msg').textContent='Saida de '+emp.nome+' registrada!';
   document.getElementById('emerg-msg').style.color='#22C97A';
   addLog(emp,'emerg',reg.horaF);
   setTimeout(fecharEmerg,2500);
 }
 
-// ── TERMINAL PONTO ──
+// -- TERMINAL PONTO --
 async function carregarModelos(){
   if(modOk)return true;
   try{
@@ -796,18 +790,18 @@ async function carregarModelos(){
   }catch(e){console.warn('modelos:',e);return false}
 }
 async function initPonto(){
-  setStat('Carregando IA de reconhecimento...','loading');
+  setStat('Carregando IA...','loading');
   if(!await carregarModelos()){setStat('Erro ao carregar IA.','err');return}
   iniciarCamPonto();iniciarRelogio();checkBdayTerminal();
 }
 async function iniciarCamPonto(){
-  setStat('Ativando câmera...','loading');
+  setStat('Ativando c?mera...','loading');
   try{
     const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640}}});
     const v=document.getElementById('vid-pt');
     v.srcObject=s;
     v.onloadedmetadata=()=>{camOk=true;setStat('Posicione o rosto para registrar o ponto.','ok');rodarDeteccao()};
-  }catch(e){setStat('Câmera bloqueada. Verifique as permissões.','err')}
+  }catch(e){setStat('Camera bloqueada. Verifique as permissoes.','err')}
 }
 function pararCamPonto(){
   if(detInt){clearInterval(detInt);detInt=null}
@@ -826,8 +820,8 @@ function rodarDeteccao(){
       const ring=document.getElementById('face-ring'),scl=document.getElementById('scan-line');
       if(det){
         ring.className='face-ring det';scl.className='scan-line on';
-        if(emps.length>0){setStat('Rosto detectado — identificando...','ok');reconhecer()}
-        else setStat('Rosto detectado — nenhum funcionário cadastrado.','ok');
+        if(emps.length>0){setStat('Rosto detectado ? identificando...','ok');reconhecer()}
+        else setStat('Rosto detectado ? nenhum funcionario cadastrado.','ok');
       }else{
         ring.className='face-ring';scl.className='scan-line';
         setStat('Posicione o rosto para registrar o ponto.','ok');
@@ -849,7 +843,7 @@ async function reconhecer(){
     const emp=emps.find(e=>String(e.id)===match.label);if(!emp){scanning=false;return}
     const now=new Date(),hora=now.toTimeString().slice(0,5),horaF=now.toTimeString().slice(0,8);
     const prox=getProxTipo(emp);
-    if(!prox){setStat(emp.nome+' já completou todos os registros hoje.','ok');scanning=false;pausarCam(4);return}
+    if(!prox){setStat(emp.nome+' ja completou todos os registros hoje.','ok');scanning=false;pausarCam(4);return}
     const val=validarJanela(emp,prox,hora);
     if(!val.ok){mostrarAviso(emp,prox,val.msg);setStat(val.msg,'err');scanning=false;pausarCam(5);return}
     const tipo=prox,st=calcSt(emp,tipo,hora);
@@ -857,7 +851,7 @@ async function reconhecer(){
     await sv('fsc_r',regs);
     mostrarResultado(emp,tipo,horaF);addLog(emp,tipo,horaF);atualizarProx(emp);
     document.getElementById('face-ring').className='face-ring rec';
-    setStat('✅ Ponto registrado: '+emp.nome,'ok');
+    setStat('Ponto registrado: '+emp.nome,'ok');
     pausarCam(CD_SECS);
   }catch(e){console.warn('rec:',e);scanning=false}
 }
@@ -881,8 +875,8 @@ function validarJanela(emp,tipo,hora){
   const [hf,mf]=j.f.split(':').map(Number);
   const [hA,mA]=hora.split(':').map(Number);
   const minI=hi*60+mi-30,minF=hf*60+mf+60,minA=hA*60+mA;
-  if(minA<minI)return{ok:false,msg:'Muito cedo. Janela abre às '+j.i+'.'};
-  if(minA>minF)return{ok:false,msg:'Fora do horário. Janela encerrou às '+j.f+'.'};
+  if(minA<minI)return{ok:false,msg:'Muito cedo. Janela abre as '+j.i+'.'};
+  if(minA>minF)return{ok:false,msg:'Fora do horario. Janela encerrou as '+j.f+'.'};
   return{ok:true};
 }
 function calcSt(emp,tipo,hora){
@@ -892,19 +886,19 @@ function calcSt(emp,tipo,hora){
   return'ok';
 }
 function mostrarAviso(emp,tipo,msg){
-  const LBLS={e:'Entrada',is:'Saída p/ intervalo',ir:'Retorno intervalo',s:'Saída'};
+  const LBLS={e:'Entrada',is:'Sa?da p/ intervalo',ir:'Retorno intervalo',s:'Sa?da'};
   document.getElementById('av-nome').textContent=emp.nome;
   document.getElementById('av-msg').textContent=msg;
-  document.getElementById('av-prox').textContent='Próximo: '+(LBLS[tipo]||tipo);
+  document.getElementById('av-prox').textContent='Pr?ximo: '+(LBLS[tipo]||tipo);
   document.getElementById('aviso-ov').classList.add('show');
 }
 function mostrarResultado(emp,tipo,ts){
   const fw=document.getElementById('res-foto-wrap');
-  fw.innerHTML=emp.foto?`<img src="${emp.foto}" class="res-foto">`:`<div class="res-ini">${ini(emp.nome)}</div>`;
+  fw.innerHTML=emp.foto?'<img src="'+emp.foto+'" class="res-foto">'+'':'<div class="res-ini">'+ini(emp.nome)+'</div>';
   document.getElementById('res-nome').textContent=emp.nome;
-  document.getElementById('res-cargo').textContent=emp.func+' · Turno '+emp.turno;
+  document.getElementById('res-cargo').textContent=emp.func+' ? Turno '+emp.turno;
   document.getElementById('res-hora').textContent=ts;
-  const LBLS={e:'✅ Entrada registrada',s:'👋 Saída registrada',is:'☕ Saindo p/ intervalo',ir:'✅ Retorno do intervalo'};
+  const LBLS={e:'Entrada registrada',s:'Saida registrada',is:'Saindo p/ intervalo',ir:'Retorno do intervalo'};
   const t=document.getElementById('res-tag');
   t.textContent=LBLS[tipo]||tipo;
   t.className='res-tag '+(tipo==='s'?'tag-s':tipo==='is'||tipo==='ir'?'tag-i':'tag-e');
@@ -912,7 +906,7 @@ function mostrarResultado(emp,tipo,ts){
 }
 function addLog(emp,tipo,ts){
   const el=document.getElementById('pt-logs');if(!el)return;
-  const LBLS={e:'Entrada',s:'Saída',is:'Saiu p/ intervalo',ir:'Retornou do intervalo',emerg:'🚨 Emergência'};
+  const LBLS={e:'Entrada',s:'Sa?da',is:'Saiu p/ intervalo',ir:'Retornou do intervalo',emerg:'? Emerg?ncia'};
   const CORS={e:'#E65300',s:'#22C97A',is:'#EAB308',ir:'#60A5FA',emerg:'#DC2626'};
   const d=document.createElement('div');
   d.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:8px';
@@ -925,15 +919,15 @@ function addLog(emp,tipo,ts){
 }
 function atualizarProx(emp){
   const prox=getProxTipo(emp);
-  const LBLS={e:'Entrada',is:'Saída p/ intervalo',ir:'Retorno do intervalo',s:'Saída'};
+  const LBLS={e:'Entrada',is:'Sa?da p/ intervalo',ir:'Retorno do intervalo',s:'Sa?da'};
   const el=document.getElementById('prox-val');if(!el)return;
-  el.textContent=prox?emp.nome.split(' ')[0]+' — '+(LBLS[prox]||prox):emp.nome.split(' ')[0]+' — ✅ Completo hoje';
+  el.textContent=prox?emp.nome.split(' ')[0]+' ? '+(LBLS[prox]||prox):emp.nome.split(' ')[0]+' ? ? Completo hoje';
 }
 function checkBdayTerminal(){
   const today=new Date();
   const tMD=String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   const b=emps.find(e=>{if(!e.nasc)return false;const pts=e.nasc.split('-');return pts[1]+'-'+pts[2]===tMD});
-  if(b)notif('🎂 Hoje é aniversário de '+b.nome.split(' ')[0]+'!');
+  if(b)notif('Aniversario de '+b.nome.split(' ')[0]+'!');
 }
 function pausarCam(secs){
   camPausado=true;scanning=false;
@@ -976,7 +970,7 @@ function iniciarRelogio(){
   tick();setInterval(tick,1000);
 }
 
-// ── MÁSCARAS ──
+// -- M?SCARAS --
 document.addEventListener('input',function(e){
   if(e.target.id==='c-cpf'){
     var v=e.target.value.replace(/[^0-9]/g,'').slice(0,11);
@@ -994,7 +988,7 @@ document.addEventListener('input',function(e){
   }
 });
 
-// ── INICIALIZAÇÃO ──
+// -- INICIALIZA??O --
 window.addEventListener('load',function(){
   initFB();
   if('serviceWorker' in navigator){
